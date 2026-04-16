@@ -1,0 +1,451 @@
+<!-- =============================================
+   CUSTOM BANNER SECTION
+   Structure:
+   1. Top Bar       → logo | tagline | CTA button
+   2. Hero Area     → background image + text overlay
+   3. Marquee Bar   → scrolling text
+============================================= -->
+
+<!-- 1. TOP BAR -->
+<div class="cb-topbar">
+  <div class="cb-topbar__logo">{{ section.settings.logo_text }}</div>
+  <div class="cb-topbar__tagline">{{ section.settings.tagline }}</div>
+  <a href="{{ section.settings.cta_url }}" class="cb-topbar__cta">
+    {{ section.settings.cta_text }} &rarr;
+  </a>
+</div>
+
+<!-- 2. HERO AREA -->
+<div class="cb-hero">
+
+  <!-- Row 1: bg-1 spans full width -->
+  <div class="cb-hero__top">
+    <img class="cb-hero__top-img" src="{{ 'bg-1.png' | asset_url }}" alt="" loading="eager">
+  </div>
+
+  <!-- Row 2: text left | bg-2 right -->
+  <div class="cb-hero__bottom">
+
+    <div class="cb-hero__overlay">
+      <h1 class="cb-hero__heading">{{ section.settings.hero_heading }}</h1>
+      <p class="cb-hero__description">{{ section.settings.hero_description }}</p>
+      <a href="{{ section.settings.shop_btn_url }}" class="cb-hero__btn">
+        {{ section.settings.shop_btn_text }} &rarr;
+      </a>
+    </div>
+
+    <div class="cb-hero__bg-col">
+      <img class="cb-hero__bg" src="{{ 'bg-2.png' | asset_url }}" alt="" loading="eager">
+    </div>
+
+  </div>
+
+</div>
+
+<!-- 3. MARQUEE BAR -->
+<div class="cb-marquee">
+  <div class="cb-marquee__track">
+    <span>{{ section.settings.marquee_text }}</span>
+    <span>{{ section.settings.marquee_text }}</span>
+  </div>
+</div>
+
+{% stylesheet %}
+
+/* =============================================
+   1. TOP BAR
+============================================= */
+.cb-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  background: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  font-family: 'Arial', sans-serif;
+}
+
+.cb-topbar__logo {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #111;
+}
+
+.cb-topbar__tagline {
+  font-size: 14px;
+  color: #111;
+  text-align: center;
+  flex: 1;
+  padding: 0 24px;
+}
+
+.cb-topbar__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #f5e642;
+  color: #111;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 12px 24px;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: gap 0.3s ease, color 0.3s ease;
+  z-index: 0;
+}
+
+/* sweep layer slides in from left */
+.cb-topbar__cta::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #111;
+  transform: translateX(-100%);
+  transition: transform 0.35s ease;
+  z-index: -1;
+}
+
+.cb-topbar__cta:hover::before {
+  transform: translateX(0);
+}
+
+.cb-topbar__cta:hover {
+  gap: 18px;
+  color: #fff;
+}
+
+/* =============================================
+   2. HERO AREA
+   Row 1: bg-1 full width
+   Row 2: text (left 35%) | bg-2 (right 65%)
+============================================= */
+.cb-hero {
+  width: 100%;
+  background: #fff;
+  overflow: hidden;
+}
+
+/* Row 1 — bg-1 full width */
+.cb-hero__top {
+  width: 100%;
+  line-height: 0;
+}
+
+.cb-hero__top-img {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center top;
+  max-height: 320px;
+}
+
+/* Row 2 — text + bg-2 side by side */
+.cb-hero__bottom {
+  display: grid;
+  grid-template-columns: 35% 65%;
+}
+
+/* Left: text content */
+.cb-hero__overlay {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 32px 32px 24px 32px;
+  background: #fff;
+}
+
+/* Right: bg-2 image */
+.cb-hero__bg-col {
+  overflow: hidden;
+  line-height: 0;
+}
+
+.cb-hero__bg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.cb-hero__heading {
+  font-family: 'Jost', sans-serif;
+  font-size: clamp(28px, 4.5vw, 70px);
+  font-weight: 600;
+  color: #111;
+  line-height: 100%;
+  letter-spacing: 0;
+  margin: 0 0 16px 0;
+  display: block;
+  white-space: nowrap;
+}
+
+.cb-hero__description {
+  font-family: 'Jost', sans-serif;
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0;
+  color: #000;
+  margin: 0 0 28px 0;
+  max-width: 300px;
+}
+
+.cb-hero__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: #111;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 16px 28px;
+  position: relative;
+  overflow: hidden;
+  transition: gap 0.3s ease, color 0.3s ease;
+  width: fit-content;
+  z-index: 0;
+}
+
+/* sweep layer slides in from left */
+.cb-hero__btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #f5e642;
+  transform: translateX(-100%);
+  transition: transform 0.35s ease;
+  z-index: -1;
+}
+
+.cb-hero__btn:hover::before {
+  transform: translateX(0);
+}
+
+.cb-hero__btn:hover {
+  gap: 22px;
+  color: #111;
+}
+
+/* =============================================
+   3. MARQUEE BAR
+============================================= */
+.cb-marquee {
+  background: #F5F5F5;
+  padding: 12px 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.cb-marquee__track {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cb-marquee__track span:last-child {
+  display: none;
+}
+
+.cb-marquee__track span {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #111;
+}
+
+/* =============================================
+   RESPONSIVE
+============================================= */
+
+/* Laptop — 1025px to 1280px */
+@media (max-width: 1280px) {
+  .cb-hero__bottom {
+    grid-template-columns: 38% 62%;
+  }
+
+  .cb-hero__heading {
+    font-size: 40px;
+  }
+
+  .cb-hero__description {
+    font-size: 18px;
+  }
+
+  .cb-hero__top-img {
+    max-height: 280px;
+  }
+
+  .cb-hero__overlay {
+    padding: 32px 32px 40px;
+  }
+}
+
+/* Tablet — 768px to 1024px */
+@media (max-width: 1024px) {
+  .cb-hero__bottom {
+    grid-template-columns: 40% 60%;
+  }
+
+  .cb-hero__heading {
+    font-size: 32px;
+  }
+
+  .cb-hero__description {
+    font-size: 15px;
+  }
+
+  .cb-hero__top-img {
+    max-height: 220px;
+  }
+
+  .cb-hero__overlay {
+    padding: 24px 24px 32px;
+  }
+
+  .cb-topbar__tagline {
+    font-size: 12px;
+  }
+}
+
+/* Mobile — below 768px */
+@media (max-width: 767px) {
+  /* Top bar: stack logo + CTA, hide tagline */
+  .cb-topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 16px;
+  }
+
+  .cb-topbar__tagline {
+    display: none;
+  }
+
+  .cb-topbar__cta {
+    font-size: 11px;
+    padding: 10px 16px;
+  }
+
+  /* Hero: single column, image on top */
+  .cb-hero__top-img {
+    max-height: 200px;
+  }
+
+  .cb-hero__bottom {
+    grid-template-columns: 1fr;
+  }
+
+  /* Hide right image on mobile — content takes full width */
+  .cb-hero__bg-col {
+    display: none;
+  }
+
+  .cb-hero__overlay {
+    padding: 24px 20px 32px;
+  }
+
+  .cb-hero__heading {
+    font-size: 28px;
+    padding: 6px 12px;
+  }
+
+  .cb-hero__description {
+    font-size: 14px;
+    max-width: 100%;
+  }
+
+  .cb-hero__btn {
+    font-size: 11px;
+    padding: 14px 20px;
+  }
+
+  .cb-marquee__track span {
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+}
+
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Custom Banner",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Top Bar"
+    },
+    {
+      "type": "text",
+      "id": "logo_text",
+      "label": "Logo Text",
+      "default": "TISSO VISON"
+    },
+    {
+      "type": "text",
+      "id": "tagline",
+      "label": "Tagline",
+      "default": "Find the ideal gift for your loved ones."
+    },
+    {
+      "type": "text",
+      "id": "cta_text",
+      "label": "CTA Button Text",
+      "default": "CHOOSE GIFT"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "CTA Button Link"
+    },
+    {
+      "type": "header",
+      "content": "Hero Area"
+    },
+    {
+      "type": "text",
+      "id": "hero_heading",
+      "label": "Heading",
+      "default": "The Gift Guide"
+    },
+    {
+      "type": "textarea",
+      "id": "hero_description",
+      "label": "Description",
+      "default": "Discover Joy: Your Ultimate Holiday Gift Destination. Explore our curated selection and find the perfect gifts to delight your loved ones this holiday season."
+    },
+    {
+      "type": "text",
+      "id": "shop_btn_text",
+      "label": "Shop Button Text",
+      "default": "SHOP NOW"
+    },
+    {
+      "type": "url",
+      "id": "shop_btn_url",
+      "label": "Shop Button Link"
+    },
+    {
+      "type": "header",
+      "content": "Marquee Bar"
+    },
+    {
+      "type": "text",
+      "id": "marquee_text",
+      "label": "Scrolling Text",
+      "default": "SUSTAINABLE, ETHICALLY MADE CLOTHES IN SIZES XXS TO 6XL"
+    }
+  ],
+  "presets": [{ "name": "Custom Banner" }]
+}
+{% endschema %}

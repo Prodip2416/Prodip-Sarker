@@ -1,0 +1,643 @@
+<!-- =============================================
+   GIFT GRID SECTION
+   Structure:
+   1. Section heading
+   2. 3x2 product grid — each block = 1 product
+   3. Popup overlay — triggered by circle button on each card
+============================================= -->
+
+<!-- 1. SECTION HEADING -->
+<div class="gg-header">
+  <h2 class="gg-header__title">{{ section.settings.heading }}</h2>
+</div>
+
+<!-- 2. PRODUCT GRID -->
+<div class="gg-grid">
+
+  {% for block in section.blocks %}
+    {% assign product = block.settings.product %}
+
+    <div class="gg-card" {{ block.shopify_attributes }}>
+
+      <!-- Product image -->
+      <div class="gg-card__img-wrap">
+        {% if product != blank and product.featured_image != blank %}
+          <img
+            class="gg-card__img"
+            src="{{ product.featured_image | image_url: width: 800 }}"
+            alt="{{ product.featured_image.alt | escape }}"
+            loading="lazy"
+            width="{{ product.featured_image.width }}"
+            height="{{ product.featured_image.height }}"
+          >
+        {% else %}
+          <div class="gg-card__img gg-card__img--placeholder"></div>
+        {% endif %}
+
+        <!-- Circle trigger button -->
+        <button
+          class="gg-card__trigger"
+          aria-label="View {{ product.title | escape }}"
+          data-product-id="{{ product.id }}"
+          data-popup-target="popup-{{ block.id }}"
+        >
+          <svg width="8" height="8" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="7" y1="1" x2="7" y2="13" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+            <line x1="1" y1="7" x2="13" y2="7" stroke="#111" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Popup overlay for this product -->
+      <div class="gg-popup" id="popup-{{ block.id }}" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="gg-popup__backdrop"></div>
+        <div class="gg-popup__box">
+
+          <button class="gg-popup__close" aria-label="Close">&times;</button>
+
+          {% if product != blank %}
+
+            <!-- Top: image + title/price/desc -->
+            <div class="gg-popup__content">
+              <div class="gg-popup__img-wrap">
+                {% if product.featured_image != blank %}
+                  <img
+                    class="gg-popup__img"
+                    src="{{ product.featured_image | image_url: width: 400 }}"
+                    alt="{{ product.featured_image.alt | escape }}"
+                    loading="lazy"
+                  >
+                {% endif %}
+              </div>
+              <div class="gg-popup__info">
+                <h3 class="gg-popup__title">{{ product.title }}</h3>
+                <p class="gg-popup__price">{{ product.price | money }}</p>
+                <p class="gg-popup__desc">{{ product.description | strip_html | truncate: 150 }}</p>
+              </div>
+            </div>
+
+            <!-- Bottom: options + ATC (full width) -->
+            <div class="gg-popup__bottom" data-variants="{{ product.variants | json | escape }}">
+
+              {% for option in product.options_with_values %}
+                <div class="gg-popup__option">
+                  <p class="gg-popup__option-label">{{ option.name }}</p>
+
+                  {% if forloop.index == 1 %}
+                    <!-- Color: pills -->
+                    <div class="gg-popup__pills" data-option-index="{{ forloop.index0 }}">
+                      {% for value in option.values %}
+                        <button
+                          class="gg-popup__pill {% if forloop.first %}is-active{% endif %}"
+                          data-value="{{ value | escape }}"
+                        >{{ value }}</button>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <!-- Size: dropdown -->
+                    <div class="gg-popup__select-wrap">
+                      <select class="gg-popup__select" data-option-index="{{ forloop.index0 }}">
+                        <option value="">Choose your {{ option.name | downcase }}</option>
+                        {% for value in option.values %}
+                          <option value="{{ value | escape }}">{{ value }}</option>
+                        {% endfor %}
+                      </select>
+                      <svg class="gg-popup__select-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none">
+                        <path d="M1 1L6 6L11 1" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
+                      </svg>
+                    </div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+
+              <button
+                class="gg-popup__atc"
+                data-product-id="{{ product.id }}"
+                data-variant-id="{{ product.selected_or_first_available_variant.id }}"
+              >
+                ADD TO CART &nbsp;&rarr;
+              </button>
+              <p class="gg-popup__atc-msg" aria-live="polite"></p>
+
+            </div>
+
+          {% endif %}
+
+        </div>
+      </div>
+
+    </div>
+  {% endfor %}
+
+</div>
+
+{% stylesheet %}
+
+/* =============================================
+   GIFT GRID — BASE
+============================================= */
+.gg-header {
+  padding: 40px 32px 24px;
+}
+
+.gg-header__title {
+  font-family: 'Lustria', serif;
+  font-size: 36px;
+  font-weight: 400;
+  line-height: 120%;
+  letter-spacing: 0;
+  color: #111;
+  margin: 0;
+}
+
+/* =============================================
+   GRID — 3 columns x 2 rows
+============================================= */
+.gg-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  background: #fff;
+  padding: 0 32px;
+}
+
+/* =============================================
+   PRODUCT CARD
+============================================= */
+.gg-card {
+  position: relative;
+  overflow: hidden;
+  aspect-ratio: 1 / 1;
+  background: #f5f5f5;
+}
+
+.gg-card__img-wrap {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.gg-card__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s ease;
+}
+
+.gg-card:hover .gg-card__img {
+  transform: none;
+}
+
+.gg-card__img--placeholder {
+  background: #e0e0e0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Circle trigger button */
+.gg-card__trigger {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  transition: transform 0.2s ease, background 0.2s ease;
+  z-index: 2;
+}
+
+.gg-card__trigger:hover {
+  transform: scale(1.15);
+  background: #f5e642;
+}
+
+.gg-card__trigger-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #111;
+  display: block;
+}
+
+/* =============================================
+   POPUP OVERLAY
+============================================= */
+.gg-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.gg-popup.is-open {
+  visibility: visible;
+  opacity: 1;
+}
+
+.gg-popup__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+}
+
+.gg-popup__box {
+  position: relative;
+  background: #fff;
+  width: 90%;
+  max-width: 500px;
+  max-height: 92vh;
+  overflow-y: auto;
+  z-index: 1;
+  transform: translateY(20px);
+  transition: transform 0.3s ease;
+}
+
+.gg-popup.is-open .gg-popup__box {
+  transform: translateY(0);
+}
+
+.gg-popup__close {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  z-index: 2;
+  font-size: 30px;
+  font-weight: 300;
+  color: #111;
+  line-height: 1;
+  transition: opacity 0.2s ease;
+}
+
+.gg-popup__close:hover { opacity: 0.5; }
+
+/* 2-col: image left | info right */
+.gg-popup__content {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  min-height: 200px;
+  max-height: 240px;
+}
+
+.gg-popup__img-wrap {
+  overflow: hidden;
+}
+
+.gg-popup__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Right column */
+.gg-popup__info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 40px 20px 24px;
+}
+
+.gg-popup__title {
+  font-family: 'Jost', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111;
+  margin: 0;
+  line-height: 1.2;
+  padding-right: 24px;
+}
+
+.gg-popup__price {
+  font-size: 20px;
+  font-weight: 500;
+  color: #111;
+  margin: 0;
+}
+
+.gg-popup__desc {
+  font-size: 13px;
+  color: #444;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Bottom: options + ATC full width */
+.gg-popup__bottom {
+  padding: 0 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gg-popup__option-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111;
+  margin: 0 0 6px 0;
+}
+
+/* Pill buttons — Color + Size */
+.gg-popup__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gg-popup__pill {
+  padding: 10px 20px;
+  border: 1px solid #ddd !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background: #fff;
+  color: #111;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+
+.gg-popup__pill.is-active {
+  background: #111 !important;
+  color: #fff !important;
+  border: 1px solid #111 !important;
+  font-weight: 600;
+}
+
+.gg-popup__pill:not(.is-active):hover {
+  background: #f5f5f5;
+}
+
+/* Size dropdown */
+.gg-popup__select-wrap {
+  position: relative;
+}
+
+.gg-popup__select {
+  width: 100%;
+  padding: 12px 40px 12px 14px;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-size: 13px;
+  color: #111;
+  appearance: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.gg-popup__select-arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* ADD TO CART */
+.gg-popup__atc {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  background: #111;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border: none;
+  padding: 16px 20px;
+  cursor: pointer;
+  margin-top: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: gap 0.3s ease, color 0.3s ease;
+  z-index: 0;
+}
+
+.gg-popup__atc::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #f5e642;
+  transform: translateX(-100%);
+  transition: transform 0.35s ease;
+  z-index: -1;
+}
+
+.gg-popup__atc:hover::before { transform: translateX(0); }
+.gg-popup__atc:hover { gap: 20px; color: #111; }
+
+.gg-popup__atc-msg {
+  font-size: 12px;
+  color: #111;
+  text-align: center;
+  margin: 6px 0 0;
+  min-height: 16px;
+}
+
+/* =============================================
+   RESPONSIVE
+============================================= */
+@media (max-width: 1024px) {
+  .gg-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .gg-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gg-popup__content {
+    grid-template-columns: 1fr;
+  }
+
+  .gg-popup__img-wrap {
+    max-height: 280px;
+  }
+
+  .gg-popup__info {
+    padding: 24px 20px;
+  }
+
+  .gg-header {
+    padding: 24px 16px 16px;
+  }
+}
+
+{% endstylesheet %}
+
+<script>
+  (function () {
+
+    /* ── Open popup ── */
+    document.querySelectorAll('.gg-card__trigger').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var popup = document.getElementById(btn.getAttribute('data-popup-target'));
+        if (!popup) return;
+        popup.classList.add('is-open');
+        popup.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      });
+    });
+
+    /* ── Close popup ── */
+    function closePopup(popup) {
+      popup.classList.remove('is-open');
+      popup.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+    }
+
+    document.querySelectorAll('.gg-popup__backdrop, .gg-popup__close').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var popup = el.closest('.gg-popup');
+        if (popup) closePopup(popup);
+      });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.gg-popup.is-open').forEach(closePopup);
+      }
+    });
+
+    /* ── Variant selection ── */
+    document.querySelectorAll('.gg-popup__bottom').forEach(function (optionsEl) {
+      var variants = JSON.parse(optionsEl.getAttribute('data-variants') || '[]');
+      var popup    = optionsEl.closest('.gg-popup__box');
+      var atcBtn   = popup.querySelector('.gg-popup__atc');
+
+      /* Track selected option values */
+      var selected = {};
+
+      /* Init selected from active pills / first select values */
+      optionsEl.querySelectorAll('.gg-popup__pills').forEach(function (pills) {
+        var active = pills.querySelector('.gg-popup__pill.is-active');
+        if (active) selected[pills.getAttribute('data-option-index')] = active.getAttribute('data-value');
+      });
+      optionsEl.querySelectorAll('.gg-popup__select').forEach(function (sel) {
+        if (sel.value) selected[sel.getAttribute('data-option-index')] = sel.value;
+      });
+
+      function updateVariant() {
+        var match = variants.find(function (v) {
+          return v.options.every(function (opt, i) {
+            return !selected[i] || selected[i] === opt;
+          });
+        });
+        if (match) atcBtn.setAttribute('data-variant-id', match.id);
+      }
+
+      /* Pill click */
+      optionsEl.querySelectorAll('.gg-popup__pill').forEach(function (pill) {
+        pill.addEventListener('click', function () {
+          var pills = pill.closest('.gg-popup__pills');
+          pills.querySelectorAll('.gg-popup__pill').forEach(function (p) { p.classList.remove('is-active'); });
+          pill.classList.add('is-active');
+          selected[pills.getAttribute('data-option-index')] = pill.getAttribute('data-value');
+          updateVariant();
+        });
+      });
+
+      /* Select change */
+      optionsEl.querySelectorAll('.gg-popup__select').forEach(function (sel) {
+        sel.addEventListener('change', function () {
+          selected[sel.getAttribute('data-option-index')] = sel.value;
+          updateVariant();
+        });
+      });
+    });
+
+    /* ── Add to cart ── */
+    document.querySelectorAll('.gg-popup__atc').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var variantId = btn.getAttribute('data-variant-id');
+        if (!variantId) return;
+        var msg = btn.closest('.gg-popup__box').querySelector('.gg-popup__atc-msg');
+        btn.disabled = true;
+        btn.textContent = 'ADDING...';
+
+        fetch('/cart/add.js', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: variantId, quantity: 1 })
+        })
+        .then(function (res) { return res.json(); })
+        .then(function () {
+          btn.textContent = 'ADDED ✓';
+          if (msg) msg.textContent = 'Item added to cart!';
+          setTimeout(function () {
+            btn.disabled = false;
+            btn.innerHTML = 'ADD TO CART &nbsp;&rarr;';
+            if (msg) msg.textContent = '';
+          }, 2000);
+        })
+        .catch(function () {
+          btn.disabled = false;
+          btn.innerHTML = 'ADD TO CART &nbsp;&rarr;';
+          if (msg) msg.textContent = 'Something went wrong.';
+        });
+      });
+    });
+
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Gift Grid",
+  "max_blocks": 6,
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Section Heading",
+      "default": "Tisso vison in the wild"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "product",
+      "name": "Product",
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Product"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Gift Grid",
+      "blocks": [
+        { "type": "product" },
+        { "type": "product" },
+        { "type": "product" },
+        { "type": "product" },
+        { "type": "product" },
+        { "type": "product" }
+      ]
+    }
+  ]
+}
+{% endschema %}

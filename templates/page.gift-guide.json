@@ -1,0 +1,84 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "layout": "gift-guide",
+  "sections": {
+    "custom-banner": {
+      "type": "custom-banner",
+      "settings": {
+        "logo_text": "TISSO VISON",
+        "tagline": "Find the ideal gift for your loved ones.",
+        "cta_text": "CHOOSE GIFT",
+        "cta_url": "",
+        "hero_heading": "The Gift Guide",
+        "hero_description": "Discover Joy: Your Ultimate Holiday Gift Destination. Explore our curated selection and find the perfect gifts to delight your loved ones this holiday season.",
+        "shop_btn_text": "SHOP NOW",
+        "shop_btn_url": "",
+        "marquee_text": "SUSTAINABLE, ETHICALLY MADE CLOTHES IN SIZES XXS TO 6XL"
+      }
+    },
+    "gift-grid": {
+      "type": "gift-grid",
+      "blocks": {
+        "block1": {
+          "type": "product",
+          "settings": {
+            "product": "black-leather-bag"
+          }
+        },
+        "block2": {
+          "type": "product",
+          "settings": {
+            "product": "blue-silk-tuxedo"
+          }
+        },
+        "block3": {
+          "type": "product",
+          "settings": {
+            "product": "chequered-red-shirt"
+          }
+        },
+        "block4": {
+          "type": "product",
+          "settings": {
+            "product": "classic-leather-jacket"
+          }
+        },
+        "block5": {
+          "type": "product",
+          "settings": {
+            "product": "classic-varsity-top"
+          }
+        },
+        "block6": {
+          "type": "product",
+          "settings": {
+            "product": "dark-denim-top"
+          }
+        }
+      },
+      "block_order": [
+        "block1",
+        "block2",
+        "block3",
+        "block4",
+        "block5",
+        "block6"
+      ],
+      "settings": {
+        "heading": "Tisso vison in the wild"
+      }
+    }
+  },
+  "order": [
+    "custom-banner",
+    "gift-grid"
+  ]
+}
