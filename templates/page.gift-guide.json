@@ -30,37 +30,49 @@
         "block1": {
           "type": "product",
           "settings": {
-            "product": "black-leather-bag"
+            "product": "black-leather-bag",
+            "trigger_x": 60,
+            "trigger_y": 55
           }
         },
         "block2": {
           "type": "product",
           "settings": {
-            "product": "blue-silk-tuxedo"
+            "product": "blue-silk-tuxedo",
+            "trigger_x": 80,
+            "trigger_y": 55
           }
         },
         "block3": {
           "type": "product",
           "settings": {
-            "product": "chequered-red-shirt"
+            "product": "chequered-red-shirt",
+            "trigger_x": 60,
+            "trigger_y": 25
           }
         },
         "block4": {
           "type": "product",
           "settings": {
-            "product": "classic-leather-jacket"
+            "product": "classic-leather-jacket",
+            "trigger_x": 70,
+            "trigger_y": 25
           }
         },
         "block5": {
           "type": "product",
           "settings": {
-            "product": "classic-varsity-top"
+            "product": "classic-varsity-top",
+            "trigger_x": 50,
+            "trigger_y": 25
           }
         },
         "block6": {
           "type": "product",
           "settings": {
-            "product": "dark-denim-top"
+            "product": "dark-denim-top",
+            "trigger_x": 75,
+            "trigger_y": 40
           }
         }
       },
