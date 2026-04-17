@@ -1,25 +1,30 @@
-<!-- =============================================
-   GIFT GRID SECTION
-   Structure:
-   1. Section heading
-   2. 3x2 product grid — each block = 1 product
-   3. Popup overlay — triggered by circle button on each card
-============================================= -->
+<!-- ============================================================
+  GIFT GRID SECTION
+  Layout:
+    1. Section heading
+    2. Product grid (3 cols desktop → 2 cols tablet → 1 col mobile)
+    3. Product popup modal (triggered by + button on each card)
+  Notes:
+    - Popups are rendered outside the grid to avoid z-index clipping
+    - Variants are loaded dynamically from Shopify product data
+    - Black + Medium combo auto-adds "Soft Winter Jacket" to cart
+============================================================ -->
 
-<!-- 1. SECTION HEADING -->
+
+<!-- ── 1. SECTION HEADING ── -->
 <div class="gg-header">
   <h2 class="gg-header__title">{{ section.settings.heading }}</h2>
 </div>
 
-<!-- 2. PRODUCT GRID -->
-<div class="gg-grid">
 
+<!-- ── 2. PRODUCT GRID ── -->
+<div class="gg-grid">
   {% for block in section.blocks %}
     {% assign product = block.settings.product %}
 
     <div class="gg-card" {{ block.shopify_attributes }}>
 
-      <!-- Product image -->
+      <!-- Product thumbnail -->
       <div class="gg-card__img-wrap">
         {% if product != blank and product.featured_image != blank %}
           <img
@@ -34,108 +39,174 @@
           <div class="gg-card__img gg-card__img--placeholder"></div>
         {% endif %}
 
-        <!-- Circle trigger button -->
+        <!-- Quick-view trigger button — position set per-block in admin -->
         <button
           class="gg-card__trigger"
-          aria-label="View {{ product.title | escape }}"
-          data-product-id="{{ product.id }}"
+          type="button"
+          aria-label="Quick view {{ product.title | escape }}"
           data-popup-target="popup-{{ block.id }}"
+          style="left: {{ block.settings.trigger_x }}%; top: {{ block.settings.trigger_y }}%;"
         >
-          <svg width="8" height="8" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Plus icon -->
+          <svg width="16" height="16" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <line x1="7" y1="1" x2="7" y2="13" stroke="#111" stroke-width="2" stroke-linecap="round"/>
             <line x1="1" y1="7" x2="13" y2="7" stroke="#111" stroke-width="2" stroke-linecap="round"/>
           </svg>
         </button>
       </div>
 
-      <!-- Popup overlay for this product -->
-      <div class="gg-popup" id="popup-{{ block.id }}" role="dialog" aria-modal="true" aria-hidden="true">
-        <div class="gg-popup__backdrop"></div>
-        <div class="gg-popup__box">
+    </div>
+  {% endfor %}
+</div>
 
-          <button class="gg-popup__close" aria-label="Close">&times;</button>
 
-          {% if product != blank %}
+<!-- ── 3. PRODUCT POPUPS ──
+     Rendered outside the grid so overflow/z-index never clips them -->
+{% for block in section.blocks %}
+  {% assign product = block.settings.product %}
+  {% if product != blank %}
 
-            <!-- Top: image + title/price/desc -->
-            <div class="gg-popup__content">
-              <div class="gg-popup__img-wrap">
-                {% if product.featured_image != blank %}
-                  <img
-                    class="gg-popup__img"
-                    src="{{ product.featured_image | image_url: width: 400 }}"
-                    alt="{{ product.featured_image.alt | escape }}"
-                    loading="lazy"
-                  >
-                {% endif %}
-              </div>
-              <div class="gg-popup__info">
-                <h3 class="gg-popup__title">{{ product.title }}</h3>
-                <p class="gg-popup__price">{{ product.price | money }}</p>
-                <p class="gg-popup__desc">{{ product.description | strip_html | truncate: 150 }}</p>
-              </div>
-            </div>
+    <!--
+      Soft Winter Jacket bundle:
+      If selected variant is Black + Medium, this jacket is auto-added.
+      `all_products` fetches by URL handle from Shopify admin.
+    -->
+    {% assign soft_jacket = all_products['soft-winter-jacket'] %}
 
-            <!-- Bottom: options + ATC (full width) -->
-            <div class="gg-popup__bottom" data-variants="{{ product.variants | json | escape }}">
+    <div
+      class="gg-popup"
+      id="popup-{{ block.id }}"
+      role="dialog"
+      aria-modal="true"
+      aria-hidden="true"
+      aria-label="{{ product.title | escape }}"
+    >
+      <!-- Clicking the backdrop closes the modal -->
+      <div class="gg-popup__backdrop"></div>
 
-              {% for option in product.options_with_values %}
-                <div class="gg-popup__option">
-                  <p class="gg-popup__option-label">{{ option.name }}</p>
+      <div class="gg-popup__box">
 
-                  {% if forloop.index == 1 %}
-                    <!-- Color: pills -->
-                    <div class="gg-popup__pills" data-option-index="{{ forloop.index0 }}">
-                      {% for value in option.values %}
-                        <button
-                          class="gg-popup__pill {% if forloop.first %}is-active{% endif %}"
-                          data-value="{{ value | escape }}"
-                        >{{ value }}</button>
-                      {% endfor %}
-                    </div>
-                  {% else %}
-                    <!-- Size: dropdown -->
-                    <div class="gg-popup__select-wrap">
-                      <select class="gg-popup__select" data-option-index="{{ forloop.index0 }}">
-                        <option value="">Choose your {{ option.name | downcase }}</option>
-                        {% for value in option.values %}
-                          <option value="{{ value | escape }}">{{ value }}</option>
-                        {% endfor %}
-                      </select>
-                      <svg class="gg-popup__select-arrow" width="12" height="8" viewBox="0 0 12 8" fill="none">
-                        <path d="M1 1L6 6L11 1" stroke="#111" stroke-width="1.5" stroke-linecap="round"/>
-                      </svg>
-                    </div>
-                  {% endif %}
-                </div>
-              {% endfor %}
+        <!-- ── Row 1: Close button ── -->
+        <div class="gg-popup__header">
+          <button class="gg-popup__close" type="button" aria-label="Close modal">&times;</button>
+        </div>
 
-              <button
-                class="gg-popup__atc"
-                data-product-id="{{ product.id }}"
-                data-variant-id="{{ product.selected_or_first_available_variant.id }}"
+        <!-- ── Row 2: Product image (left) + Info (right) ── -->
+        <div class="gg-popup__top">
+
+          <!-- Left: product image -->
+          <div class="gg-popup__img-wrap">
+            {% if product.featured_image != blank %}
+              <img
+                class="gg-popup__img"
+                src="{{ product.featured_image | image_url: width: 600 }}"
+                alt="{{ product.featured_image.alt | escape }}"
+                loading="lazy"
               >
-                ADD TO CART &nbsp;&rarr;
-              </button>
-              <p class="gg-popup__atc-msg" aria-live="polite"></p>
+            {% endif %}
+          </div>
 
-            </div>
+          <!-- Right: name, price, short description -->
+          <div class="gg-popup__info">
+            <h3 class="gg-popup__title">{{ product.title }}</h3>
+            <p class="gg-popup__price">{{ product.price | money }}</p>
+            <p class="gg-popup__desc">{{ product.description | strip_html | truncate: 160 }}</p>
+          </div>
 
-          {% endif %}
+        </div>
+
+        <!-- ── Row 3: Variant options + Add to Cart (full width) ──
+             data-variants: all variant JSON used by JS to match selections
+             data-bundle-variant-id: Soft Winter Jacket variant for auto-bundle -->
+        <div
+          class="gg-popup__options"
+          data-variants="{{ product.variants | json | escape }}"
+          data-bundle-variant-id="{{ soft_jacket.selected_or_first_available_variant.id }}"
+        >
+
+          <!-- Color option → pill buttons (always rendered first) -->
+          {% for option in product.options_with_values %}
+            {% assign oname = option.name | downcase %}
+            {% if oname == 'color' or oname == 'colour' %}
+              <div class="gg-popup__option-group">
+                <p class="gg-popup__option-label">{{ option.name }}</p>
+                <div class="gg-popup__pills" data-option-index="{{ forloop.index0 }}">
+                  {% for value in option.values %}
+                    <!-- border-left color = actual color name (CSS named color) -->
+                    <button
+                      class="gg-popup__pill{% if forloop.first %} is-active{% endif %}"
+                      type="button"
+                      data-value="{{ value | escape }}"
+                      style="border-left: 5px solid {{ value | downcase }};"
+                    >{{ value }}</button>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+
+          <!-- All non-color options → select dropdowns (rendered after color) -->
+          {% for option in product.options_with_values %}
+            {% assign oname = option.name | downcase %}
+            {% unless oname == 'color' or oname == 'colour' %}
+              <div class="gg-popup__option-group">
+                <p class="gg-popup__option-label">{{ option.name }}</p>
+                <div class="gg-popup__select-wrap">
+                  <select class="gg-popup__select" data-option-index="{{ forloop.index0 }}">
+                    {% for value in option.values %}
+                      <option value="{{ value | escape }}">{{ value }}</option>
+                    {% endfor %}
+                  </select>
+                  <!-- Custom chevron arrow (hides default browser arrow) -->
+                  <span class="gg-popup__select-icon" aria-hidden="true">
+                    <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+                      <path d="M1 1L6 6L11 1" stroke="#111" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
+                </div>
+              </div>
+            {% endunless %}
+          {% endfor %}
+
+          <!-- Add to Cart button -->
+          <button
+            class="gg-popup__atc"
+            type="button"
+            data-product-id="{{ product.id }}"
+            data-variant-id="{{ product.selected_or_first_available_variant.id }}"
+          >
+            ADD TO CART <span class="gg-popup__atc-arrow" aria-hidden="true">&rarr;</span>
+          </button>
+
+          <!-- Feedback message shown after cart action -->
+          <p class="gg-popup__atc-msg" aria-live="polite"></p>
 
         </div>
       </div>
-
     </div>
-  {% endfor %}
 
-</div>
+  {% endif %}
+{% endfor %}
+
 
 {% stylesheet %}
 
-/* =============================================
-   GIFT GRID — BASE
-============================================= */
+/* ============================================================
+   GLOBAL BOX-SIZING
+   Makes width/padding calculations predictable everywhere
+============================================================ */
+.gg-header,
+.gg-grid,
+.gg-card,
+.gg-popup,
+.gg-popup * {
+  box-sizing: border-box;
+}
+
+
+/* ============================================================
+   SECTION HEADING
+============================================================ */
 .gg-header {
   padding: 40px 32px 24px;
 }
@@ -144,26 +215,27 @@
   font-family: 'Lustria', serif;
   font-size: 36px;
   font-weight: 400;
-  line-height: 120%;
-  letter-spacing: 0;
+  line-height: 1.2;
   color: #111;
   margin: 0;
 }
 
-/* =============================================
-   GRID — 3 columns x 2 rows
-============================================= */
+
+/* ============================================================
+   PRODUCT GRID
+   Desktop: 3 columns  |  Tablet: 2 columns  |  Mobile: 1 column
+============================================================ */
 .gg-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
-  background: #fff;
-  padding: 0 32px;
+  gap: 24px;
+  padding: 0 32px 48px;
 }
 
-/* =============================================
+
+/* ============================================================
    PRODUCT CARD
-============================================= */
+============================================================ */
 .gg-card {
   position: relative;
   overflow: hidden;
@@ -182,26 +254,22 @@
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.4s ease;
 }
 
-.gg-card:hover .gg-card__img {
-  transform: none;
-}
-
+/* Empty state when no image is set */
 .gg-card__img--placeholder {
-  background: #e0e0e0;
   width: 100%;
   height: 100%;
+  background: #e0e0e0;
 }
 
-/* Circle trigger button */
+/* Small circular + button — position controlled via inline style (per-block) */
 .gg-card__trigger {
   position: absolute;
-  bottom: 16px;
-  left: 16px;
-  width: 18px;
-  height: 18px;
+  /* top & left set by inline style from block settings */
+  transform: translate(-50%, -50%);
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: #fff;
   border: none;
@@ -209,37 +277,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s ease, background 0.2s ease;
   z-index: 2;
 }
 
 .gg-card__trigger:hover {
-  transform: scale(1.15);
+  transform: scale(1.12);
   background: #f5e642;
 }
 
-.gg-card__trigger-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #111;
-  display: block;
-}
 
-/* =============================================
-   POPUP OVERLAY
-============================================= */
+/* ============================================================
+   POPUP — full-screen overlay
+============================================================ */
 .gg-popup {
   position: fixed;
   inset: 0;
-  z-index: 1000;
+  z-index: 9999;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* hidden by default, shown via .is-open */
   visibility: hidden;
   opacity: 0;
-  transition: opacity 0.3s ease, visibility 0.3s ease;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
 }
 
 .gg-popup.is-open {
@@ -247,55 +309,79 @@
   opacity: 1;
 }
 
+/* Semi-transparent backdrop behind the modal box */
 .gg-popup__backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   cursor: pointer;
 }
 
+
+/* ============================================================
+   POPUP — modal box
+   Flex column: [close row] → [image+info row] → [options]
+============================================================ */
 .gg-popup__box {
   position: relative;
+  z-index: 1;
   background: #fff;
-  width: 90%;
-  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  width: 90vw;
+  max-width: 340px;
   max-height: 92vh;
   overflow-y: auto;
-  z-index: 1;
-  transform: translateY(20px);
-  transition: transform 0.3s ease;
+  /* slide-in animation */
+  transform: translateY(16px);
+  transition: transform 0.25s ease;
 }
 
 .gg-popup.is-open .gg-popup__box {
   transform: translateY(0);
 }
 
+
+/* ── Close button row ──
+   Only the × appears here, pushed to the right */
+.gg-popup__header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px 14px 0;
+  flex-shrink: 0;
+}
+
 .gg-popup__close {
-  position: absolute;
-  top: 12px;
-  right: 16px;
   background: none;
   border: none;
   cursor: pointer;
-  z-index: 2;
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 300;
-  color: #111;
   line-height: 1;
-  transition: opacity 0.2s ease;
+  color: #111;
+  padding: 0;
+  transition: opacity 0.2s;
 }
 
-.gg-popup__close:hover { opacity: 0.5; }
-
-/* 2-col: image left | info right */
-.gg-popup__content {
-  display: grid;
-  grid-template-columns: 40% 60%;
-  min-height: 200px;
-  max-height: 240px;
+.gg-popup__close:hover {
+  opacity: 0.5;
 }
 
+
+/* ── Top row: image (left) + info (right) ── */
+.gg-popup__top {
+  display: flex;
+  flex-direction: row;
+  min-height: 160px;
+  max-height: 185px;
+  padding: 0 20px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+/* Product image — fills height of top row */
 .gg-popup__img-wrap {
+  flex: 0 0 42%;
   overflow: hidden;
 }
 
@@ -306,300 +392,449 @@
   display: block;
 }
 
-/* Right column */
+/* Title, price, description */
 .gg-popup__info {
+  flex: 1;
+  padding: 10px 0 10px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 40px 20px 24px;
+  overflow: hidden;
 }
 
 .gg-popup__title {
-  font-family: 'Jost', sans-serif;
-  font-size: 20px;
+  font-size: 15px;
   font-weight: 600;
   color: #111;
-  margin: 0;
+  margin: 0 0 10px;
   line-height: 1.2;
-  padding-right: 24px;
 }
 
 .gg-popup__price {
-  font-size: 20px;
-  font-weight: 500;
+  font-size: 15px;
+  font-weight: 400;
   color: #111;
-  margin: 0;
+  margin: 0 0 6px;
 }
 
 .gg-popup__desc {
-  font-size: 13px;
-  color: #444;
-  line-height: 1.6;
+  font-size: 11px;
+  color: #555;
+  line-height: 1.5;
   margin: 0;
+  /* Limit description to 3 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-/* Bottom: options + ATC full width */
-.gg-popup__bottom {
-  padding: 0 20px 24px;
+
+/* ── Options block: Color, Size, Add to Cart ── */
+.gg-popup__options {
+  padding: 14px 20px 20px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
 
+/* Label above each option (e.g. "Color", "Size") */
 .gg-popup__option-label {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   color: #111;
-  margin: 0 0 6px 0;
+  margin: 0 0 7px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* Pill buttons — Color + Size */
+
+/* ── Color pills ──
+   Full-width row, each button takes equal space */
 .gg-popup__pills {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  width: 100%;
+  border: 1px solid #ccc;
 }
 
 .gg-popup__pill {
-  padding: 10px 20px;
-  border: 1px solid #ddd !important;
-  outline: none !important;
-  box-shadow: none !important;
+  flex: 1;
+  padding: 11px 8px;
   background: #fff;
   color: #111;
+  border: none;
+  /* border-left is set via inline style to match actual color */
   font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.2s, color 0.2s, border-color 0.2s;
+  text-align: center;
+  outline: none;
+  transition: background 0.2s, color 0.2s;
 }
 
+/* Divider between pills */
+.gg-popup__pill + .gg-popup__pill {
+  border-left: 1px solid #ccc;
+}
+
+/* Active pill: black background */
 .gg-popup__pill.is-active {
-  background: #111 !important;
-  color: #fff !important;
-  border: 1px solid #111 !important;
+  background: #111;
+  color: #fff;
   font-weight: 600;
 }
 
 .gg-popup__pill:not(.is-active):hover {
-  background: #f5f5f5;
+  background: #f0f0f0;
 }
 
-/* Size dropdown */
+
+/* ── Size dropdown ── */
 .gg-popup__select-wrap {
   position: relative;
+  border: 1px solid #ccc;
 }
 
 .gg-popup__select {
   width: 100%;
   padding: 12px 40px 12px 14px;
-  border: 1px solid #ddd;
-  background: #fff;
+  border: none;
+  background: transparent;
   font-size: 13px;
   color: #111;
+  /* hide default browser arrow */
   appearance: none;
+  -webkit-appearance: none;
   cursor: pointer;
   outline: none;
 }
 
-.gg-popup__select-arrow {
+/* Custom chevron icon */
+.gg-popup__select-icon {
   position: absolute;
-  right: 14px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
   pointer-events: none;
+  display: flex;
+  align-items: center;
 }
 
-/* ADD TO CART */
+
+/* ── Add to Cart button ── */
 .gg-popup__atc {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
   width: 100%;
+  padding: 15px 20px;
   background: #111;
   color: #fff;
-  font-size: 12px;
+  border: none;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 2px;
   text-transform: uppercase;
-  border: none;
-  padding: 16px 20px;
   cursor: pointer;
-  margin-top: 8px;
-  position: relative;
-  overflow: hidden;
-  transition: gap 0.3s ease, color 0.3s ease;
-  z-index: 0;
 }
 
-.gg-popup__atc::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: #f5e642;
-  transform: translateX(-100%);
-  transition: transform 0.35s ease;
-  z-index: -1;
+.gg-popup__atc:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.gg-popup__atc:hover::before { transform: translateX(0); }
-.gg-popup__atc:hover { gap: 20px; color: #111; }
+.gg-popup__atc-arrow {
+  font-size: 15px;
+}
 
+/* Feedback message below ATC (e.g. "Added to cart!") */
 .gg-popup__atc-msg {
-  font-size: 12px;
+  font-size: 11px;
   color: #111;
   text-align: center;
-  margin: 6px 0 0;
+  margin: -6px 0 0;
   min-height: 16px;
 }
 
-/* =============================================
-   RESPONSIVE
-============================================= */
+
+/* ============================================================
+   RESPONSIVE — Tablet (≤ 1024px)
+============================================================ */
 @media (max-width: 1024px) {
   .gg-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 767px) {
-  .gg-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .gg-popup__content {
-    grid-template-columns: 1fr;
-  }
-
-  .gg-popup__img-wrap {
-    max-height: 280px;
-  }
-
-  .gg-popup__info {
-    padding: 24px 20px;
+    gap: 20px;
+    padding: 0 24px 40px;
   }
 
   .gg-header {
-    padding: 24px 16px 16px;
+    padding: 32px 24px 20px;
+  }
+}
+
+
+/* ============================================================
+   RESPONSIVE — Mobile (≤ 640px)
+   Modal stacks vertically: image top → info → options → ATC
+============================================================ */
+@media (max-width: 640px) {
+  .gg-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    padding: 0 16px 32px;
+  }
+
+  .gg-header {
+    padding: 24px 16px 14px;
+  }
+
+  .gg-header__title {
+    font-size: 26px;
+  }
+
+  /* Modal takes almost full screen width */
+  .gg-popup__box {
+    width: 96vw;
+    max-width: 100%;
+    max-height: 90vh;
+  }
+
+  /* Stack image above info on mobile */
+  .gg-popup__top {
+    flex-direction: column;
+    max-height: none;
+    padding: 0;
+    gap: 0;
+  }
+
+  /* Image fills full width, fixed height */
+  .gg-popup__img-wrap {
+    flex: 0 0 auto;
+    width: 100%;
+    height: 200px;
+  }
+
+  /* Info section gets normal padding */
+  .gg-popup__info {
+    padding: 14px 16px 10px;
+  }
+
+  .gg-popup__title {
+    font-size: 14px;
+  }
+
+  .gg-popup__price {
+    font-size: 14px;
+  }
+
+  .gg-popup__options {
+    padding: 10px 16px 18px;
+  }
+}
+
+
+/* ============================================================
+   RESPONSIVE — Small mobile (≤ 375px)
+   Keep 2 columns even on small phones
+============================================================ */
+@media (max-width: 375px) {
+  .gg-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 0 10px 24px;
+  }
+
+  .gg-popup__img-wrap {
+    height: 180px;
   }
 }
 
 {% endstylesheet %}
 
-<script>
-  (function () {
 
-    /* ── Open popup ── */
-    document.querySelectorAll('.gg-card__trigger').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var popup = document.getElementById(btn.getAttribute('data-popup-target'));
-        if (!popup) return;
-        popup.classList.add('is-open');
-        popup.setAttribute('aria-hidden', 'false');
-        document.body.style.overflow = 'hidden';
-      });
+<script>
+/**
+ * Gift Grid — Popup & Cart Logic
+ * Vanilla JS only, no dependencies.
+ *
+ * Features:
+ *  - Open / close popup modal
+ *  - Keyboard (Escape) close support
+ *  - Dynamic variant selection (pills + selects)
+ *  - Add to cart via Shopify /cart/add.js
+ *  - Auto-bundle: Black + Medium → also adds Soft Winter Jacket
+ *  - Cart count update after add
+ */
+(function () {
+  'use strict';
+
+
+  /* ── Open popup ──────────────────────────────── */
+  document.querySelectorAll('.gg-card__trigger').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var popup = document.getElementById(btn.getAttribute('data-popup-target'));
+      if (!popup) return;
+      popup.classList.add('is-open');
+      popup.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden'; // prevent background scroll
+    });
+  });
+
+
+  /* ── Close popup ─────────────────────────────── */
+  function closePopup(popup) {
+    popup.classList.remove('is-open');
+    popup.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+
+  // Close on backdrop click or × button
+  document.querySelectorAll('.gg-popup__backdrop, .gg-popup__close').forEach(function (el) {
+    el.addEventListener('click', function () {
+      var popup = el.closest('.gg-popup');
+      if (popup) closePopup(popup);
+    });
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      document.querySelectorAll('.gg-popup.is-open').forEach(closePopup);
+    }
+  });
+
+
+  /* ── Variant selection ───────────────────────── */
+  document.querySelectorAll('.gg-popup__options').forEach(function (optEl) {
+    var variants = JSON.parse(optEl.getAttribute('data-variants') || '[]');
+    var atcBtn   = optEl.querySelector('.gg-popup__atc');
+
+    // Tracks currently selected option values by option index
+    var selected = {};
+
+    // Initialise from default active pills and first select values
+    optEl.querySelectorAll('.gg-popup__pills').forEach(function (pills) {
+      var active = pills.querySelector('.gg-popup__pill.is-active');
+      if (active) selected[pills.getAttribute('data-option-index')] = active.getAttribute('data-value');
+    });
+    optEl.querySelectorAll('.gg-popup__select').forEach(function (sel) {
+      if (sel.value) selected[sel.getAttribute('data-option-index')] = sel.value;
     });
 
-    /* ── Close popup ── */
-    function closePopup(popup) {
-      popup.classList.remove('is-open');
-      popup.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
+    // Find matching variant and update the ATC button's variant ID
+    function updateVariant() {
+      var match = variants.find(function (v) {
+        return v.options.every(function (opt, i) {
+          return !selected[i] || selected[i] === opt;
+        });
+      });
+      if (match && atcBtn) atcBtn.setAttribute('data-variant-id', match.id);
     }
 
-    document.querySelectorAll('.gg-popup__backdrop, .gg-popup__close').forEach(function (el) {
-      el.addEventListener('click', function () {
-        var popup = el.closest('.gg-popup');
-        if (popup) closePopup(popup);
+    // Pill click → toggle active, update selected
+    optEl.querySelectorAll('.gg-popup__pill').forEach(function (pill) {
+      pill.addEventListener('click', function () {
+        var pills = pill.closest('.gg-popup__pills');
+        pills.querySelectorAll('.gg-popup__pill').forEach(function (p) {
+          p.classList.remove('is-active');
+        });
+        pill.classList.add('is-active');
+        selected[pills.getAttribute('data-option-index')] = pill.getAttribute('data-value');
+        updateVariant();
       });
     });
 
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        document.querySelectorAll('.gg-popup.is-open').forEach(closePopup);
+    // Select change → update selected
+    optEl.querySelectorAll('.gg-popup__select').forEach(function (sel) {
+      sel.addEventListener('change', function () {
+        selected[sel.getAttribute('data-option-index')] = sel.value;
+        updateVariant();
+      });
+    });
+  });
+
+
+  /* ── Add to Cart ─────────────────────────────── */
+  document.querySelectorAll('.gg-popup__atc').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var variantId = btn.getAttribute('data-variant-id');
+      if (!variantId) return;
+
+      var optEl = btn.closest('.gg-popup__options');
+      var box   = btn.closest('.gg-popup__box');
+      var msg   = box ? box.querySelector('.gg-popup__atc-msg') : null;
+
+      // Collect all currently selected option values (lowercase for comparison)
+      var selectedValues = [];
+      if (optEl) {
+        optEl.querySelectorAll('.gg-popup__pill.is-active').forEach(function (p) {
+          selectedValues.push(p.getAttribute('data-value').toLowerCase());
+        });
+        optEl.querySelectorAll('.gg-popup__select').forEach(function (s) {
+          if (s.value) selectedValues.push(s.value.toLowerCase());
+        });
       }
-    });
 
-    /* ── Variant selection ── */
-    document.querySelectorAll('.gg-popup__bottom').forEach(function (optionsEl) {
-      var variants = JSON.parse(optionsEl.getAttribute('data-variants') || '[]');
-      var popup    = optionsEl.closest('.gg-popup__box');
-      var atcBtn   = popup.querySelector('.gg-popup__atc');
+      // Bundle rule: Black + Medium → also add Soft Winter Jacket
+      var isBlack  = selectedValues.indexOf('black')  !== -1;
+      var isMedium = selectedValues.indexOf('medium') !== -1;
+      var bundleVariantId = optEl ? optEl.getAttribute('data-bundle-variant-id') : null;
+      var addBundle = isBlack && isMedium && bundleVariantId;
 
-      /* Track selected option values */
-      var selected = {};
+      // Build items array (1 or 2 products)
+      var items = [{ id: parseInt(variantId, 10), quantity: 1 }];
+      if (addBundle) {
+        items.push({ id: parseInt(bundleVariantId, 10), quantity: 1 });
+      }
 
-      /* Init selected from active pills / first select values */
-      optionsEl.querySelectorAll('.gg-popup__pills').forEach(function (pills) {
-        var active = pills.querySelector('.gg-popup__pill.is-active');
-        if (active) selected[pills.getAttribute('data-option-index')] = active.getAttribute('data-value');
-      });
-      optionsEl.querySelectorAll('.gg-popup__select').forEach(function (sel) {
-        if (sel.value) selected[sel.getAttribute('data-option-index')] = sel.value;
-      });
+      // UI feedback during request
+      btn.disabled = true;
+      btn.textContent = 'ADDING...';
 
-      function updateVariant() {
-        var match = variants.find(function (v) {
-          return v.options.every(function (opt, i) {
-            return !selected[i] || selected[i] === opt;
+      fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: items })
+      })
+      .then(function (res) { return res.json(); })
+      .then(function () {
+        // Success feedback
+        btn.textContent = 'ADDED \u2713';
+        if (msg) {
+          msg.textContent = addBundle
+            ? 'Added! Soft Winter Jacket also added.'
+            : 'Item added to your cart!';
+        }
+
+        // Update cart count badge (works with most Shopify themes)
+        fetch('/cart.js')
+          .then(function (r) { return r.json(); })
+          .then(function (cart) {
+            document.querySelectorAll('[data-cart-count], .cart-count, .header__cart-count').forEach(function (el) {
+              el.textContent = cart.item_count;
+            });
           });
-        });
-        if (match) atcBtn.setAttribute('data-variant-id', match.id);
-      }
 
-      /* Pill click */
-      optionsEl.querySelectorAll('.gg-popup__pill').forEach(function (pill) {
-        pill.addEventListener('click', function () {
-          var pills = pill.closest('.gg-popup__pills');
-          pills.querySelectorAll('.gg-popup__pill').forEach(function (p) { p.classList.remove('is-active'); });
-          pill.classList.add('is-active');
-          selected[pills.getAttribute('data-option-index')] = pill.getAttribute('data-value');
-          updateVariant();
-        });
-      });
-
-      /* Select change */
-      optionsEl.querySelectorAll('.gg-popup__select').forEach(function (sel) {
-        sel.addEventListener('change', function () {
-          selected[sel.getAttribute('data-option-index')] = sel.value;
-          updateVariant();
-        });
-      });
-    });
-
-    /* ── Add to cart ── */
-    document.querySelectorAll('.gg-popup__atc').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        var variantId = btn.getAttribute('data-variant-id');
-        if (!variantId) return;
-        var msg = btn.closest('.gg-popup__box').querySelector('.gg-popup__atc-msg');
-        btn.disabled = true;
-        btn.textContent = 'ADDING...';
-
-        fetch('/cart/add.js', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: variantId, quantity: 1 })
-        })
-        .then(function (res) { return res.json(); })
-        .then(function () {
-          btn.textContent = 'ADDED ✓';
-          if (msg) msg.textContent = 'Item added to cart!';
-          setTimeout(function () {
-            btn.disabled = false;
-            btn.innerHTML = 'ADD TO CART &nbsp;&rarr;';
-            if (msg) msg.textContent = '';
-          }, 2000);
-        })
-        .catch(function () {
+        // Reset button after 2.5s
+        setTimeout(function () {
           btn.disabled = false;
-          btn.innerHTML = 'ADD TO CART &nbsp;&rarr;';
-          if (msg) msg.textContent = 'Something went wrong.';
-        });
+          btn.innerHTML = 'ADD TO CART <span class="gg-popup__atc-arrow" aria-hidden="true">&rarr;</span>';
+          if (msg) msg.textContent = '';
+        }, 2500);
+      })
+      .catch(function () {
+        // Error feedback
+        btn.disabled = false;
+        btn.innerHTML = 'ADD TO CART <span class="gg-popup__atc-arrow" aria-hidden="true">&rarr;</span>';
+        if (msg) msg.textContent = 'Something went wrong. Try again.';
       });
     });
+  });
 
-  })();
+
+})();
 </script>
+
 
 {% schema %}
 {
@@ -622,6 +857,24 @@
           "type": "product",
           "id": "product",
           "label": "Product"
+        },
+        {
+          "type": "range",
+          "id": "trigger_x",
+          "label": "Icon position — left (%)",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "default": 15
+        },
+        {
+          "type": "range",
+          "id": "trigger_y",
+          "label": "Icon position — top (%)",
+          "min": 0,
+          "max": 100,
+          "step": 1,
+          "default": 85
         }
       ]
     }
